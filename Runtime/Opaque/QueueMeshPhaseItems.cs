@@ -22,7 +22,6 @@ public sealed class QueueMeshPhaseItems : IPrepareSystem
         var ecs = renderWorld.Entities;
         if (ecs.Count<RenderMeshInstance>() == 0) return;
 
-        // Ensure phase resources exist
         var opaquePhase = renderWorld.TryGet<Opaque3dPhase>();
         if (opaquePhase is null)
         {
@@ -37,11 +36,9 @@ public sealed class QueueMeshPhaseItems : IPrepareSystem
             renderWorld.Set(transparentPhase);
         }
 
-        // Clear from previous frame
         opaquePhase.Phase.Clear();
         transparentPhase.Phase.Clear();
 
-        // Query render entities with RenderMeshInstance component
         foreach (var (renderEntity, mesh) in ecs.Query<RenderMeshInstance>())
         {
             bool isTransparent = mesh.Albedo.W < 1.0f;
@@ -51,7 +48,7 @@ public sealed class QueueMeshPhaseItems : IPrepareSystem
                 transparentPhase.Phase.Add(new TransparentPhaseItem
                 {
                     EntityId = mesh.MainEntityId,
-                    SortKey = mesh.VertexCount, // approximate; refine with camera-space Z later
+                    SortKey = mesh.VertexCount, // TODO: replace with camera-space Z for proper depth sort.
                     ModelMatrix = mesh.ModelMatrix,
                     Albedo = mesh.Albedo,
                     VertexCount = mesh.VertexCount,
@@ -63,7 +60,7 @@ public sealed class QueueMeshPhaseItems : IPrepareSystem
                 opaquePhase.Phase.Add(new OpaquePhaseItem
                 {
                     EntityId = mesh.MainEntityId,
-                    SortKey = mesh.VertexCount, // approximate; refine with camera-space Z later
+                    SortKey = mesh.VertexCount, // TODO: replace with camera-space Z for proper depth sort.
                     ModelMatrix = mesh.ModelMatrix,
                     Albedo = mesh.Albedo,
                     VertexCount = mesh.VertexCount,
@@ -72,7 +69,7 @@ public sealed class QueueMeshPhaseItems : IPrepareSystem
             }
         }
 
-        // Sort: opaque front-to-back, transparent back-to-front
+        // Opaque front-to-back (early-Z), transparent back-to-front (correct blending).
         opaquePhase.Phase.Sort(descending: false);
         transparentPhase.Phase.Sort(descending: true);
     }
