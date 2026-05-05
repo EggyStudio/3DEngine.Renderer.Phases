@@ -42,6 +42,7 @@ public sealed class QueueMeshPhaseItems : IPrepareSystem
         foreach (var (renderEntity, mesh) in ecs.Query<RenderMeshInstance>())
         {
             bool isTransparent = mesh.Albedo.W < 1.0f;
+            int materialId = mesh.Material.Id;
 
             if (isTransparent)
             {
@@ -49,9 +50,11 @@ public sealed class QueueMeshPhaseItems : IPrepareSystem
                 {
                     EntityId = mesh.MainEntityId,
                     SortKey = mesh.VertexCount, // TODO: replace with camera-space Z for proper depth sort.
+                    BatchKey = materialId,
                     ModelMatrix = mesh.ModelMatrix,
                     Albedo = mesh.Albedo,
                     VertexCount = mesh.VertexCount,
+                    MaterialId = materialId,
                     DrawFunction = null // assigned by MainPassNode
                 });
             }
@@ -61,9 +64,11 @@ public sealed class QueueMeshPhaseItems : IPrepareSystem
                 {
                     EntityId = mesh.MainEntityId,
                     SortKey = mesh.VertexCount, // TODO: replace with camera-space Z for proper depth sort.
+                    BatchKey = materialId,
                     ModelMatrix = mesh.ModelMatrix,
                     Albedo = mesh.Albedo,
                     VertexCount = mesh.VertexCount,
+                    MaterialId = materialId,
                     DrawFunction = null // assigned by MainPassNode
                 });
             }
